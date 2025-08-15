@@ -129,7 +129,7 @@ class ClusterGraph(nx.Graph):  # inherit networkx digraph
             # self.nodes[ni]['data'].index = ni
 
 
-def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, **kwargs):
+def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_modularity=True):
     '''
     Run community detection algorithm with a resolution parameter. 
     Use RB in Louvain/Leiden. 
@@ -137,26 +137,23 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, **kwargs):
 
     Parameters
     ----------
-    Gs : a list of igraph.Graph
-    alg : str
+    Gs: a list of igraph.Graph
+    alg: str
         choose between 'louvain' and 'leiden'
     gamma : float
         resolution parameter
-    sample : if smaller than 1, randomly delete a fraction of edges each time
+    sample: if smaller than 1, randomly delete a fraction of edges each time
     layer_weights: a list of float
         specifying layer weights in the multilayer setting
-    **kwargs: dict
-        algorithm-specific parameters:
-        - steps: int (default=4) - random walk steps
-        - us_modularity: bool (default=True) let walktrap algorithm optimize cuts for modularity
+    steps: length of random walks for Walktrap algorithm
+    
+    use_modularity: bool (default=True) let walktrap algorithm optimize cuts for modularity
     Returns
     ------
     C: scipy.sparse.csr_matrix
         a matrix recording the membership of each cluster
 
     '''
-    steps = kwargs.get('steps', 4)
-    use_modularity = kwargs.get('use_modularity', True)
 
     if len(Gs) == 1:
         G = Gs[0]
@@ -196,7 +193,7 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, **kwargs):
         elif alg == 'walktrap':
             partitions = []
             for i, G in enumerate(Gs1): 
-                partition = run_walktrap(G, gamma, step, use_modularity)
+                partition = run_walktrap(G, gamma, steps, use_modularity)
                 partitions.append(partition)
 
             max_weight_idx = layer_weights.index(max(layer_weights))
@@ -441,6 +438,10 @@ def run(Gs,
     bisect: deprecated
     numthreads: int
         Number of threads to run in parallel. Default is set to number of cores.
+    steps: int
+        number of steps to take in random walk
+    use_modularity: bool
+        defaults to True and allows Walktrap to optimize modularity. When False, uses gamma to make decisions about cuts
 
     Returns
     ----------
@@ -529,7 +530,7 @@ def run(Gs,
         # cluG.add_clusters(resolution_graph, new_resolution)
 
     # run community detection for each resolution
-    _arg_tuples = [(Gs, alg, res, sample, layer_weights, {'steps': steps, 'use_modularity': use_modularity}) for res in all_resolutions]
+    _arg_tuples = [(Gs, alg, res, sample, layer_weights, steps, use_modularity) for res in all_resolutions]
     with mp.Pool(processes=numthreads) as pool:
         results = pool.starmap(run_alg, _arg_tuples)  # results contains "partition" class
     for i in range(len(all_resolutions)):
