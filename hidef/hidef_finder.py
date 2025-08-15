@@ -129,9 +129,11 @@ class ClusterGraph(nx.Graph):  # inherit networkx digraph
             # self.nodes[ni]['data'].index = ni
 
 
-def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None):
+def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, **kwargs):
     '''
-    Run community detection algorithm with a resolution parameter. Right now only use RB in Louvain/Leiden
+    Run community detection algorithm with a resolution parameter. 
+    Use RB in Louvain/Leiden. 
+    Now supports walktrap with step parameter and resolution functions with kwargs
 
     Parameters
     ----------
@@ -143,12 +145,19 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None):
     sample : if smaller than 1, randomly delete a fraction of edges each time
     layer_weights: a list of float
         specifying layer weights in the multilayer setting
+    **kwargs: dict
+        algorithm-specific parameters:
+        - steps: int (default=4) - random walk steps
+        - us_modularity: bool (default=True) let walktrap algorithm optimize cuts for modularity
     Returns
     ------
     C: scipy.sparse.csr_matrix
         a matrix recording the membership of each cluster
 
     '''
+    steps = kwargs.get('steps', 4)
+    use_modularity = kwargs.get('use_modularity', True)
+
     if len(Gs) == 1:
         G = Gs[0]
         G1 = G.copy()
@@ -160,10 +169,10 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None):
         elif alg == 'leiden':
             partition_type = leidenalg.RBConfigurationVertexPartition
             partition = leidenalg.find_partition(G1, partition_type, resolution_parameter=gamma)
-        partitions = [partition]
         elif alg == 'walktrap':
-            partition_type =
-            partition = walktrap
+            partition = run_walktrap(G1, gamma, steps, use_modularity)
+
+        partitions = [partition]
     else:  # multiplex mode
         if layer_weights == None:
             layer_weights = [1.0 for _ in Gs]
@@ -184,15 +193,17 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None):
             partitions = [partition_type(G, resolution_parameter=gamma) for G in Gs1]
             _ = optimiser.optimise_partition_multiplex(partitions, n_iterations=-1, layer_weights=layer_weights) # -1 means iterate until no further optimization
             # print([len(p) for p in partitions]) # debug
-        elif alg = 'walktrap':
-            partition_type = 
-            optimiser = 
-            partitions =
-            _ = optimiser.optimise_partition_multiplex(partions, )
+        elif alg == 'walktrap':
+            partitions = []
+            for i, G in enumerate(Gs1): 
+                partition = run_walktrap(G, gamma, step, use_modularity)
+                partitions.append(partition)
 
+            max_weight_idx = layer_weights.index(max(layer_weights))
+            partitions = [partitions[max_weight_idx]]
 
     # partition = sorted(partition, key=len, reverse=True)
-    LOGGER.info('Resolution: {:.4f}; find {} clusters'.format(gamma, len(partitions[0])))
+    LOGGER.info(f'Algorithm: {}; Resolution/Cut: {:.4f}; Found {} clusters'.format(alg, gamma, len(partitions[0])))
 
     return partition_to_membership_matrix(partitions[0])
 
@@ -246,6 +257,53 @@ def run_walktrap(G, gamma, steps=4, use_modularity=True):
         LOGGER.error(f"Error in walktrap algorithm: {str(e)}")
         return _create_fallback_partition(G.vcount())
 
+class WalktrapPartition:
+    '''
+    Partition wrapper that matches louvain/leiden interface for HiDeF compatibility
+    '''
+    def __init__(self, clustering, dendrogram=None):
+        self.membership = list(clustering.membership)
+        self._clustering = clustering
+        self._dendrogram = dendrogram
+        
+        # Store additional walktrap-specific information
+        if dendrogram is not None:
+            try:
+                self.modularity_scores = dendrogram.modularities if hasattr(dendrogram, 'modularities') else None
+                self.optimal_count = dendrogram.optimal_count if hasattr(dendrogram, 'optimal_count') else len(clustering)
+            except:
+                self.modularity_scores = None
+                self.optimal_count = len(clustering)
+    
+    def __len__(self):
+        return len(self._clustering)
+    
+    def __iter__(self):
+        return iter(self._clustering)
+    
+    def summary(self):
+        '''Return summary of walktrap results'''
+        return {
+            'n_communities': len(self._clustering),
+            'modularity': self._clustering.modularity if hasattr(self._clustering, 'modularity') else None,
+            'optimal_count': getattr(self, 'optimal_count', None),
+            'membership': self.membership
+        }
+
+
+def _create_fallback_partition(n_nodes):
+    '''Create fallback partition when walktrap fails'''
+    class FallbackPartition:
+        def __init__(self, n_nodes):
+            self.membership = [0] * n_nodes
+            
+        def __len__(self):
+            return 1
+            
+        def __iter__(self):
+            return iter([list(range(len(self.membership)))])
+    
+    return FallbackPartition(n_nodes)
 
 
 def partition_to_membership_matrix(partition, minsize=4):
