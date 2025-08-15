@@ -161,6 +161,9 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None):
             partition_type = leidenalg.RBConfigurationVertexPartition
             partition = leidenalg.find_partition(G1, partition_type, resolution_parameter=gamma)
         partitions = [partition]
+        elif alg == 'walktrap':
+            partition_type =
+            partition = walktrap
     else:  # multiplex mode
         if layer_weights == None:
             layer_weights = [1.0 for _ in Gs]
@@ -181,12 +184,68 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None):
             partitions = [partition_type(G, resolution_parameter=gamma) for G in Gs1]
             _ = optimiser.optimise_partition_multiplex(partitions, n_iterations=-1, layer_weights=layer_weights) # -1 means iterate until no further optimization
             # print([len(p) for p in partitions]) # debug
+        elif alg = 'walktrap':
+            partition_type = 
+            optimiser = 
+            partitions =
+            _ = optimiser.optimise_partition_multiplex(partions, )
 
 
     # partition = sorted(partition, key=len, reverse=True)
     LOGGER.info('Resolution: {:.4f}; find {} clusters'.format(gamma, len(partitions[0])))
 
     return partition_to_membership_matrix(partitions[0])
+
+def run_walktrap(G, gamma, steps=4, use_modularity=True):
+    '''
+    Run walktrap algorithm in igraph and return partitions
+
+    Parameters
+    ----------
+    G: igraph.Graph
+    gamma: float
+        use_modularity=False to use. 
+        - Higher gamma = more clusters (smaller communities)
+        - Lower gamma = fewer clusters (larger communities)
+    steps: int
+        steps for random walk, default = 4
+    use_modularity: bool
+        if True (default), cut at optimal modularity. ignores gamma
+        if False, use gamma to control cluster count
+    
+    Returns
+    -------
+    partition: WalktrapPartition
+        Partition object mimicking HiDeF format
+    '''
+
+    try:
+        weights = None
+        if 'weight' in G.es.attributes():
+            weights = G.es['weight']
+
+            weights = [max(w,1e-8) for w in weights]
+        dendrogram = G.community_walktrap(weights=weights, steps=steps)
+
+        if use_modularity:
+            clustering = dendrogram.as_clustering()
+            LOGGER.info(f"Walktrap cut at optimal modularity: {len(clustering)} communities")
+        else:
+            n_nodes = G.vcount()
+            if gamma <= 0:
+                n_clusters = 1
+            elif gamma >= n_nodes:
+                n_clusters = n_nodes
+            else:
+                n_clusters = max(1, min(n_nodes, int(gamma)))
+            clustering = dendrogram.as_clustering(n_clusters)
+            LOGGER.info(f"Walktrap cut at {n_clusters} communities (gamma={gamma})")
+        
+        return WalktrapPartition(clustering, dendrogram)
+    except Exception as e:
+        LOGGER.error(f"Error in walktrap algorithm: {str(e)}")
+        return _create_fallback_partition(G.vcount())
+
 
 
 def partition_to_membership_matrix(partition, minsize=4):
@@ -687,7 +746,7 @@ if __name__ == '__main__':
                                                        'graph and choose representative genes for each community '
                                                        'ensemble')  # Consensus threshold.
     par.add_argument('--o', required=True, help='output file in ddot format')
-    par.add_argument('--alg', default='leiden', choices=['louvain', 'leiden'], help='accept louvain or leiden')
+    par.add_argument('--alg', default='leiden', choices=['louvain', 'leiden', 'walktrap'], help='accept louvain, leiden, or walktrap')
     par.add_argument('--iter', action='store_true', help='iterate weave function until fully converge')
     par.add_argument('--skipgml', action='store_true', help='If True, skips output of gml file')
     par.add_argument('--keepclug', action='store_true', help='If True, output of cluG file')
