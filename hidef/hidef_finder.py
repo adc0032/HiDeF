@@ -203,7 +203,7 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, **kwargs):
             partitions = [partitions[max_weight_idx]]
 
     # partition = sorted(partition, key=len, reverse=True)
-    LOGGER.info(f'Algorithm: {}; Resolution/Cut: {:.4f}; Found {} clusters'.format(alg, gamma, len(partitions[0])))
+    LOGGER.info('Algorithm: {}; Resolution/Cut: {:.4f}; Found {} clusters'.format(alg, gamma, len(partitions[0])))
 
     return partition_to_membership_matrix(partitions[0])
 
