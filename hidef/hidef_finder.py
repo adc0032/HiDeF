@@ -529,7 +529,7 @@ def run(Gs,
         # cluG.add_clusters(resolution_graph, new_resolution)
 
     # run community detection for each resolution
-    _arg_tuples = [(Gs, alg, res, sample, layer_weights {'steps': steps, 'use_modularity': use_modularity}) for res in all_resolutions]
+    _arg_tuples = [(Gs, alg, res, sample, layer_weights, {'steps': steps, 'use_modularity': use_modularity}) for res in all_resolutions]
     with mp.Pool(processes=numthreads) as pool:
         results = pool.starmap(run_alg, _arg_tuples)  # results contains "partition" class
     for i in range(len(all_resolutions)):
