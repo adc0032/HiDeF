@@ -412,7 +412,9 @@ def run(Gs,
         density=0.1,
         neighbors=10,
         numthreads=mp.cpu_count(),
-        layer_weights=None):
+        layer_weights=None,
+        steps=4,
+        use_modularity=True):
     '''
     Main function to run the Finder program
 
@@ -431,7 +433,7 @@ def run(Gs,
     maxn: float
         will explore resolution parameter until cluster number is similar to this number; will override 'maxres'
     alg: str
-        can choose between 'louvain' or 'leiden'
+        can choose from 'louvain', 'leiden', or 'walktrap'
     density: float
         inversed density of sampling resolution parameter. Use a smaller value to increase sample density (will increase running time)
     neighbors: int
@@ -527,7 +529,7 @@ def run(Gs,
         # cluG.add_clusters(resolution_graph, new_resolution)
 
     # run community detection for each resolution
-    _arg_tuples = [(Gs, alg, res, sample, layer_weights) for res in all_resolutions]
+    _arg_tuples = [(Gs, alg, res, sample, layer_weights {'steps': steps, 'use_modularity': use_modularity}) for res in all_resolutions]
     with mp.Pool(processes=numthreads) as pool:
         results = pool.starmap(run_alg, _arg_tuples)  # results contains "partition" class
     for i in range(len(all_resolutions)):
@@ -805,6 +807,8 @@ if __name__ == '__main__':
                                                        'ensemble')  # Consensus threshold.
     par.add_argument('--o', required=True, help='output file in ddot format')
     par.add_argument('--alg', default='leiden', choices=['louvain', 'leiden', 'walktrap'], help='accept louvain, leiden, or walktrap')
+    par.add_argument('--steps', type=int, default=4, help='length of random walks for Walktrap algorithm')
+    par.add_argument('--use_modularity', action='store_true', default=True, help='For Walktrap, cut at optimal modularity')
     par.add_argument('--iter', action='store_true', help='iterate weave function until fully converge')
     par.add_argument('--skipgml', action='store_true', help='If True, skips output of gml file')
     par.add_argument('--keepclug', action='store_true', help='If True, output of cluG file')
@@ -870,7 +874,9 @@ if __name__ == '__main__':
                maxn=args.n,  # will soon go deprecated
                alg=args.alg,
                numthreads=num_threads,
-               layer_weights=layer_weights
+               layer_weights=layer_weights,
+               steps=getattr(args, 'steps', 4),
+               use_modularity=getattr(args, 'use_modularity', True)
                )
     # # use weaver to organize them (due to the previous collapsed step, need to re-calculate containment index. This may be ok
     # components = sorted(nx.connected_components(cluG), key=len, reverse=True)
