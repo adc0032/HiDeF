@@ -539,7 +539,7 @@ def run(Gs,
         cluG.add_clusters(resolution_graph, all_resolutions[i])
 
     # collapse related clusters
-    LOGGER.report('Multiresolution Louvain clustering in %.2fs', '_sample')
+    LOGGER.report('Multiresolution {} clustering in %.2fs'.format(alg), '_sample')
     return cluG
 
 
