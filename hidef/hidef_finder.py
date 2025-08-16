@@ -810,7 +810,7 @@ if __name__ == '__main__':
     par.add_argument('--o', required=True, help='output file in ddot format')
     par.add_argument('--alg', default='leiden', choices=['louvain', 'leiden', 'walktrap'], help='accept louvain, leiden, or walktrap')
     par.add_argument('--steps', type=int, default=4, help='length of random walks for Walktrap algorithm')
-    par.add_argument('--use_modularity', action='store_true', default=True, help='For Walktrap, cut at optimal modularity')
+    par.add_argument('--use_modularity', type=boolean, action='store_true', default=True, help='For Walktrap, cut at optimal modularity')
     par.add_argument('--iter', action='store_true', help='iterate weave function until fully converge')
     par.add_argument('--skipgml', action='store_true', help='If True, skips output of gml file')
     par.add_argument('--keepclug', action='store_true', help='If True, output of cluG file')
