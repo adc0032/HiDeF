@@ -243,7 +243,7 @@ def run_walktrap(G, gamma, steps=4, use_modularity=True):
             max_possible_clusters = n_nodes
             try:
                 if hasattr(dendrogram, '_merges'):
-                    max_possible_clusters = len(dendrogram._merges) + 1
+                    max_possible_clusters = len(dendrogram._merges) - 1
             except:
                 pass
             
