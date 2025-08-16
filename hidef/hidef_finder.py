@@ -240,14 +240,26 @@ def run_walktrap(G, gamma, steps=4, use_modularity=True):
             LOGGER.info(f"Walktrap cut at optimal modularity: {len(clustering)} communities")
         else:
             n_nodes = G.vcount()
-            if gamma <= 0:
+            max_possible_clusters = n_nodes
+            try:
+                if hasattr(dendrogram, '_merges'):
+                    max_possible_clusters = len(dendrogram._merges) + 1
+            except:
+                pass
+            
+            try:
+                optimal_count = dendrogram.optimal_count
+            except:
+                optimal_count = max(1, int(n_nodes / 10))
+
+            if gamma <= 0.1:
                 n_clusters = 1
-            elif gamma >= n_nodes:
-                n_clusters = n_nodes
             else:
-                n_clusters = max(1, min(n_nodes, int(gamma)))
+                target_clusters = int(optimal_count * gamma)
+                n_clusters = max(1, min(target_clusters, max_possible_clusters))
+
             clustering = dendrogram.as_clustering(n_clusters)
-            LOGGER.info(f"Walktrap cut at {n_clusters} communities (gamma={gamma})")
+            LOGGER.info(f"Walktrap cut at {n_clusters} communities (gamma={gamma}, optimal={optimal_count}, max_possible={max_possible_clusters})")
         
         return WalktrapPartition(clustering, dendrogram)
     except Exception as e:
