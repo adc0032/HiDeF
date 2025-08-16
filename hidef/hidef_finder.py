@@ -262,6 +262,7 @@ class WalktrapPartition:
         self.membership = list(clustering.membership)
         self._clustering = clustering
         self._dendrogram = dendrogram
+        self.n = len(self.membership) 
         
         # Store additional walktrap-specific information
         if dendrogram is not None:
