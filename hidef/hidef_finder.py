@@ -430,7 +430,7 @@ def run(Gs,
         numthreads=mp.cpu_count(),
         layer_weights=None,
         steps=4,
-        use_modularity=True):
+        use_modularity=False):
     '''
     Main function to run the Finder program
 
