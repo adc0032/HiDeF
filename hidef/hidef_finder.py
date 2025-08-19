@@ -557,7 +557,7 @@ def run(Gs,
             result = pool.apply_async(run_alg, arg_tuple)
             results.append(result)
         final_results = []
-        for i,result in enumerate(result):
+        for i, result in enumerate(results):
             print(f"Waiting for resolution {i+1}/{len(results)}...")
             final_results.append(result.get(timeout=60))
             print(f"Completed resolution {i+1}")
