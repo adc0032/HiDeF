@@ -248,7 +248,8 @@ def run_walktrap(G, gamma, steps=4, use_modularity=True):
                 pass
             
             try:
-                optimal_count = dendrogram.optimal_count
+                #optimal_count = dendrogram.optimal_count
+                optimal_count = max(1, int(n_nodes / 10))
             except:
                 optimal_count = max(1, int(n_nodes / 10))
 
@@ -286,7 +287,8 @@ class WalktrapPartition:
         if dendrogram is not None:
             try:
                 self.modularity_scores = dendrogram.modularities
-                self.optimal_count = dendrogram.optimal_count
+                #self.optimal_count = dendrogram.optimal_count
+                self.optimal_count = len(clustering)
             except:
                 self.modularity_scores = None
                 self.optimal_count = len(clustering)
@@ -460,7 +462,7 @@ def run(Gs,
     steps: int
         number of steps to take in random walk
     use_modularity: bool
-        defaults to True and allows Walktrap to optimize modularity. When False, uses gamma to make decisions about cuts
+        defaults to False and uses gamma to make decisions about cuts. When True, allows Walktrap to optimize modularity 
 
     Returns
     ----------
