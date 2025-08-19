@@ -253,10 +253,10 @@ def run_walktrap(G, gamma, steps=4, use_modularity=True):
                 optimal_count = max(1, int(n_nodes / 10))
 
             if gamma <= 0.1:
-                n_clusters = 1
+                n_clusters = 2
             else:
                 target_clusters = int(optimal_count * gamma)
-                n_clusters = max(1, min(target_clusters, max_possible_clusters))
+                n_clusters = max(2, min(target_clusters, max_possible_clusters))
 
             print(f"  gamma = {gamma}")
             print(f"  target_clusters = {int(optimal_count * gamma)}")
