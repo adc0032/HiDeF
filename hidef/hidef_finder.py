@@ -894,8 +894,8 @@ if __name__ == '__main__':
                alg=args.alg,
                numthreads=num_threads,
                layer_weights=layer_weights,
-               steps=getattr(args, 'steps', 4),
-               use_modularity=getattr(args, 'use_modularity', True)
+               steps=args.steps,
+               use_modularity=args.use_modularity
                )
     # # use weaver to organize them (due to the previous collapsed step, need to re-calculate containment index. This may be ok
     # components = sorted(nx.connected_components(cluG), key=len, reverse=True)
