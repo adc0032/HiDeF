@@ -258,6 +258,12 @@ def run_walktrap(G, gamma, steps=4, use_modularity=True):
                 target_clusters = int(optimal_count * gamma)
                 n_clusters = max(1, min(target_clusters, max_possible_clusters))
 
+            print(f"  gamma = {gamma}")
+            print(f"  target_clusters = {int(optimal_count * gamma)}")
+            print(f"  max_possible_clusters = {max_possible_clusters}")
+            print(f"  FINAL n_clusters = {n_clusters}")
+            print(f"  About to call dendrogram.as_clustering({n_clusters})")
+
             clustering = dendrogram.as_clustering(n_clusters)
             LOGGER.info(f"Walktrap cut at {n_clusters} communities (gamma={gamma}, optimal={optimal_count}, max_possible={max_possible_clusters})")
         
