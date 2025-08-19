@@ -549,8 +549,21 @@ def run(Gs,
     for i, res in enumerate(all_resolutions):
         print(f"  Resolution {i+1}/{len(all_resolutions)}: gamma={res:.4f}")
 
+    print("Starting multiprocessing...")
     with mp.Pool(processes=numthreads) as pool:
-        results = pool.starmap(run_alg, _arg_tuples)  # results contains "partition" class
+        results = []
+        for i, arg_tuple in enumerate(_arg_tuples):
+            print(f"Starting resolution {i+1}/{len(_arg_tuples)}: gamma={arg_tuple[2]:.4f}")
+            result = pool.apply_async(run_alg, arg_tuple)
+            results.append(result)
+        final_results = []
+        for i,result in enumerate(result):
+            print(f"Waiting for resolution {i+1}/{len(results)}...")
+            final_results.append(result.get(timeout=60))
+            print(f"Completed resolution {i+1}")
+            #results = pool.starmap(run_alg, _arg_tuples)  # results contains "partition" class
+
+
     for i in range(len(all_resolutions)):
         nodename = '{:.4f}'.format(all_resolutions[i])
         resolution_graph.nodes[nodename]['matrix'] = results[i]
