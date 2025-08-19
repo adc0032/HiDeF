@@ -285,8 +285,8 @@ class WalktrapPartition:
         # Store additional walktrap-specific information
         if dendrogram is not None:
             try:
-                self.modularity_scores = dendrogram.modularities if hasattr(dendrogram, 'modularities') else None
-                self.optimal_count = dendrogram.optimal_count if hasattr(dendrogram, 'optimal_count') else len(clustering)
+                self.modularity_scores = dendrogram.modularities
+                self.optimal_count = dendrogram.optimal_count
             except:
                 self.modularity_scores = None
                 self.optimal_count = len(clustering)
