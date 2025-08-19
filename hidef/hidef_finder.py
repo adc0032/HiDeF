@@ -545,10 +545,6 @@ def run(Gs,
     # run community detection for each resolution
     _arg_tuples = [(Gs, alg, res, sample, layer_weights, steps, use_modularity) for res in all_resolutions]
 
-    print(f"DEBUG: About to process {len(all_resolutions)} resolutions:")
-    for i, res in enumerate(all_resolutions):
-        print(f"  Resolution {i+1}/{len(all_resolutions)}: gamma={res:.4f}")
-
     print("Starting multiprocessing...")
     with mp.Pool(processes=numthreads) as pool:
         results = []
