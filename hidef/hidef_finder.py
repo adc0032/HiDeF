@@ -559,7 +559,7 @@ def run(Gs,
         final_results = []
         for i, result in enumerate(results):
             print(f"Waiting for resolution {i+1}/{len(results)}...")
-            final_results.append(result.get(timeout=60))
+            final_results.append(result.get(timeout=600))
             print(f"Completed resolution {i+1}")
             #results = pool.starmap(run_alg, _arg_tuples)  # results contains "partition" class
 
