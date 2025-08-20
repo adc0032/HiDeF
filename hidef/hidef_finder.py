@@ -294,7 +294,7 @@ def _create_fallback_partition(n_nodes):
     class FallbackPartition:
         def __init__(self, n_nodes):
             self.membership = [0] * n_nodes
-            
+            self.n = n_nodes
         def __len__(self):
             return 1
             
