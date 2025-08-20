@@ -202,7 +202,7 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_mod
 
     if alg == 'walktrap':
         LOGGER.info('Algorithm: {}; Steps: {}; Gamma/Resolution: {:.4f}; Found {} communities'.format(
-            alg, walktrap_steps, gamma, len(partitions[0])))
+            alg, steps, gamma, len(partitions[0])))
     else:
         LOGGER.info('Algorithm: {}; Gamma/Resolution:: {:.4f}; Found {} communities'.format(
             alg, gamma, len(partitions[0])))
@@ -325,7 +325,7 @@ def partition_to_membership_matrix(partition, minsize=4):
     print(f"DEBUG: Total clusters from iteration = {len(clusters_all)}")
     clusters_filtered = [p for p in partition if len(p) >= minsize]
     print(f"DEBUG: Clusters after minsize={minsize} filter = {len(clusters_filtered)}")
-    
+
     clusters = sorted([p for p in partition if len(p) >= minsize], key=len, reverse=True)
     row, col = [], []
     for i in range(len(clusters)):
