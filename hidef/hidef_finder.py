@@ -320,6 +320,12 @@ def partition_to_membership_matrix(partition, minsize=4):
     C: scipy.sparse.csr_matrix
         a matrix recording the membership of each cluster
     '''
+    print(f"DEBUG: partition.__len__() = {len(partition)}")
+    clusters_all = [p for p in partition]
+    print(f"DEBUG: Total clusters from iteration = {len(clusters_all)}")
+    clusters_filtered = [p for p in partition if len(p) >= minsize]
+    print(f"DEBUG: Clusters after minsize={minsize} filter = {len(clusters_filtered)}")
+    
     clusters = sorted([p for p in partition if len(p) >= minsize], key=len, reverse=True)
     row, col = [], []
     for i in range(len(clusters)):
