@@ -237,7 +237,6 @@ def run_walktrap(G, gamma, steps=4, use_modularity=False):
             dendrogram = G.community_walktrap(weights=weights, steps=walktrap_steps)
             clustering = dendrogram.as_clustering()
             
-            LOGGER.info(f"Walktrap (steps={walktrap_steps}) cut at optimal modularity: {len(clustering)} communities")
         else:
            log_gamma = np.log10(max(gamma, 0.001))
            steps_float = 8 - (log_gamma + 3) * 6 / 5 
@@ -245,9 +244,7 @@ def run_walktrap(G, gamma, steps=4, use_modularity=False):
 
            dendrogram = G.community_walktrap(weights=weights, steps=walktrap_steps)
            clustering = dendrogram.as_clustering()
-           
-           LOGGER.info(f"Walktrap (gamma={gamma:.4f}, steps={walktrap_steps}) found {len(clustering)} communities")
-        
+                   
         return WalktrapPartition(clustering, dendrogram)
     except Exception as e:
         LOGGER.error(f"Error in walktrap algorithm: {str(e)}")
