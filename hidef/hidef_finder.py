@@ -133,7 +133,7 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_mod
     '''
     Run community detection algorithm with a resolution parameter. 
     Use RB in Louvain/Leiden. 
-    Now supports walktrap with step parameter and resolution functions with kwargs
+    Now supports walktrap
 
     Parameters
     ----------
@@ -146,8 +146,9 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_mod
     layer_weights: a list of float
         specifying layer weights in the multilayer setting
     steps: length of random walks for Walktrap algorithm
-    
-    use_modularity: bool (default=False) when true, uses walktrap optimized modularity (optimal communities)
+    use_modularity: bool 
+        (default=False) when true, uses walktrap optimized modularity (optimal communities)
+   
     Returns
     ------
     C: scipy.sparse.csr_matrix
@@ -199,8 +200,12 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_mod
             max_weight_idx = layer_weights.index(max(layer_weights))
             partitions = [partitions[max_weight_idx]]
 
-    # partition = sorted(partition, key=len, reverse=True)
-    LOGGER.info('Algorithm: {}; Resolution/Cut: {:.4f}; Found {} clusters'.format(alg, gamma, len(partitions[0])))
+    if alg == 'walktrap':
+        LOGGER.info('Algorithm: {}; Steps: {}; Gamma/Resolution: {:.4f}; Found {} communities'.format(
+            alg, walktrap_steps, gamma, len(partitions[0])))
+    else:
+        LOGGER.info('Algorithm: {}; Gamma/Resolution:: {:.4f}; Found {} communities'.format(
+            alg, gamma, len(partitions[0])))
 
     return partition_to_membership_matrix(partitions[0])
 
