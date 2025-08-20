@@ -442,7 +442,7 @@ def run(Gs,
     steps: int
         number of steps to take in random walk
     use_modularity: bool
-        defaults to False and uses gamma to make decisions about cuts. When True, allows Walktrap to optimize modularity 
+        defaults to False and uses gamma to make decisions about steps. When True, allows Walktrap to optimize modularity using 'steps' variable
 
     Returns
     ----------
@@ -550,7 +550,7 @@ def run(Gs,
 
     for i in range(len(all_resolutions)):
         nodename = '{:.4f}'.format(all_resolutions[i])
-        resolution_graph.nodes[nodename]['matrix'] = results[i]
+        resolution_graph.nodes[nodename]['matrix'] = final_results[i]
         cluG.add_clusters(resolution_graph, all_resolutions[i])
 
     # collapse related clusters
