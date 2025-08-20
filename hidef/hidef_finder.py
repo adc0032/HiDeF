@@ -200,11 +200,8 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_mod
             max_weight_idx = layer_weights.index(max(layer_weights))
             partitions = [partitions[max_weight_idx]]
 
-    if alg == 'walktrap':
-        LOGGER.info('Algorithm: {}; Steps: {}; Gamma/Resolution: {:.4f}; Found {} communities'.format(
-            alg, steps, gamma, len(partitions[0])))
-    else:
-        LOGGER.info('Algorithm: {}; Gamma/Resolution:: {:.4f}; Found {} communities'.format(
+    
+    LOGGER.info('Algorithm: {}; Gamma/Resolution:: {:.4f}; Found {} communities'.format(
             alg, gamma, len(partitions[0])))
 
     return partition_to_membership_matrix(partitions[0])
@@ -229,8 +226,6 @@ def run_walktrap(G, gamma, steps=4, use_modularity=False):
     partition: WalktrapPartition
         Partition object mimicking HiDeF format
     '''
-
-    print(f"DEBUG: Input params - gamma={gamma}, steps={steps}, use_modularity={use_modularity}")
     try:
         weights = None
         if 'weight' in G.es.attributes():
@@ -249,7 +244,7 @@ def run_walktrap(G, gamma, steps=4, use_modularity=False):
            log_gamma = np.log10(max(gamma, 0.001))
            steps_float = 8 - (log_gamma + 3) * 6 / 5 
            walktrap_steps = max(2,min(8, int(round(steps_float))))
-           
+
            print(f"DEBUG: log_gamma={log_gamma:.3f}, steps_float={steps_float:.3f}, walktrap_steps={walktrap_steps}")
 
            dendrogram = G.community_walktrap(weights=weights, steps=walktrap_steps)
