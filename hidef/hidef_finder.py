@@ -129,7 +129,7 @@ class ClusterGraph(nx.Graph):  # inherit networkx digraph
             # self.nodes[ni]['data'].index = ni
 
 
-def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_modularity=True):
+def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_modularity=False):
     '''
     Run community detection algorithm with a resolution parameter. 
     Use RB in Louvain/Leiden. 
@@ -139,7 +139,7 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_mod
     ----------
     Gs: a list of igraph.Graph
     alg: str
-        choose between 'louvain' and 'leiden'
+        choose between 'louvain', 'leiden', 'walktrap'
     gamma : float
         resolution parameter
     sample: if smaller than 1, randomly delete a fraction of edges each time
@@ -147,7 +147,7 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_mod
         specifying layer weights in the multilayer setting
     steps: length of random walks for Walktrap algorithm
     
-    use_modularity: bool (default=True) let walktrap algorithm optimize cuts for modularity
+    use_modularity: bool (default=False) when true, uses walktrap optimized modularity (optimal communities)
     Returns
     ------
     C: scipy.sparse.csr_matrix
@@ -204,22 +204,20 @@ def run_alg(Gs, alg, gamma=1.0, sample=1.0, layer_weights=None, steps=4, use_mod
 
     return partition_to_membership_matrix(partitions[0])
 
-def run_walktrap(G, gamma, steps=4, use_modularity=True):
+def run_walktrap(G, gamma, steps=4, use_modularity=False):
     '''
-    Run walktrap algorithm in igraph and return partitions
+    Run walktrap algorithm in igraph and return partitions compatible with HiDeF
 
     Parameters
     ----------
     G: igraph.Graph
     gamma: float
-        use_modularity=False to use. 
-        - Higher gamma = more clusters (smaller communities)
-        - Lower gamma = fewer clusters (larger communities)
+        Resolution parameter - gets mapped to steps for different community structure 
     steps: int
         steps for random walk, default = 4
     use_modularity: bool
-        if True (default), cut at optimal modularity. ignores gamma
-        if False, use gamma to control cluster count
+        if True, cut at optimal modularity. ignores gamma
+        if False (default), use gamma to control cluster count
     
     Returns
     -------
@@ -233,40 +231,22 @@ def run_walktrap(G, gamma, steps=4, use_modularity=True):
             weights = G.es['weight']
 
             weights = [max(w,1e-8) for w in weights]
-        dendrogram = G.community_walktrap(weights=weights, steps=steps)
 
         if use_modularity:
+            walktrap_steps = steps
+            dendrogram = G.community_walktrap(weights=weights, steps=walktrap_steps)
             clustering = dendrogram.as_clustering()
-            LOGGER.info(f"Walktrap cut at optimal modularity: {len(clustering)} communities")
-        else:
-            n_nodes = G.vcount()
-            max_possible_clusters = n_nodes - 10
-            try:
-                if hasattr(dendrogram, '_merges'):
-                    max_possible_clusters = min(n_nodes,len(dendrogram._merges) - 1)
-            except:
-                pass
             
-            try:
-                #optimal_count = dendrogram.optimal_count
-                optimal_count = max(1, int(n_nodes / 10))
-            except:
-                optimal_count = max(1, int(n_nodes / 10))
+            LOGGER.info(f"Walktrap (steps={walktrap_steps}) cut at optimal modularity: {len(clustering)} communities")
+        else:
+           log_gamma = np.log10(max(gamma, 0.001))
+           steps_float = 8 - (log_gamma + 3) * 6 / 5 
+           walktrap_steps = max(2,min(8, int(round(steps_float))))
 
-            if gamma <= 0.1:
-                n_clusters = 2
-            else:
-                target_clusters = int(optimal_count * gamma)
-                n_clusters = max(2, min(target_clusters, max_possible_clusters))
-
-            print(f"  gamma = {gamma}")
-            print(f"  target_clusters = {int(optimal_count * gamma)}")
-            print(f"  max_possible_clusters = {max_possible_clusters}")
-            print(f"  FINAL n_clusters = {n_clusters}")
-            print(f"  About to call dendrogram.as_clustering({n_clusters})")
-
-            clustering = dendrogram.as_clustering(n_clusters)
-            LOGGER.info(f"Walktrap cut at {n_clusters} communities (gamma={gamma}, optimal={optimal_count}, max_possible={max_possible_clusters})")
+           dendrogram = G.community_walktrap(weights=weights, steps=walktrap_steps)
+           clustering = dendrogram.as_clustering()
+           
+           LOGGER.info(f"Walktrap (gamma={gamma:.4f}, steps={walktrap_steps}) found {len(clustering)} communities")
         
         return WalktrapPartition(clustering, dendrogram)
     except Exception as e:
