@@ -230,6 +230,7 @@ def run_walktrap(G, gamma, steps=4, use_modularity=False):
         Partition object mimicking HiDeF format
     '''
 
+    print(f"DEBUG: Input params - gamma={gamma}, steps={steps}, use_modularity={use_modularity}")
     try:
         weights = None
         if 'weight' in G.es.attributes():
@@ -238,11 +239,13 @@ def run_walktrap(G, gamma, steps=4, use_modularity=False):
             weights = [max(w,1e-8) for w in weights]
 
         if use_modularity:
+            print("DEBUG: Using modularity branch")
             walktrap_steps = steps
             dendrogram = G.community_walktrap(weights=weights, steps=walktrap_steps)
             clustering = dendrogram.as_clustering()
             
         else:
+           print("DEBUG: Using gamma-to-steps mapping")
            log_gamma = np.log10(max(gamma, 0.001))
            steps_float = 8 - (log_gamma + 3) * 6 / 5 
            walktrap_steps = max(2,min(8, int(round(steps_float))))
@@ -306,7 +309,7 @@ def _create_fallback_partition(n_nodes):
     return FallbackPartition(n_nodes)
 
 
-def partition_to_membership_matrix(partition, minsize=4):
+def partition_to_membership_matrix(partition, minsize=2):
     '''
 
     Parameters
