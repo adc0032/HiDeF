@@ -249,6 +249,8 @@ def run_walktrap(G, gamma, steps=4, use_modularity=False):
            log_gamma = np.log10(max(gamma, 0.001))
            steps_float = 8 - (log_gamma + 3) * 6 / 5 
            walktrap_steps = max(2,min(8, int(round(steps_float))))
+           
+           print(f"DEBUG: log_gamma={log_gamma:.3f}, steps_float={steps_float:.3f}, walktrap_steps={walktrap_steps}")
 
            dendrogram = G.community_walktrap(weights=weights, steps=walktrap_steps)
            clustering = dendrogram.as_clustering()
