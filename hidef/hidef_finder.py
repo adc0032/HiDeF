@@ -532,25 +532,12 @@ def run(Gs,
 
     # run community detection for each resolution
     _arg_tuples = [(Gs, alg, res, sample, layer_weights, steps, use_modularity) for res in all_resolutions]
-
-    print("Starting multiprocessing...")
     with mp.Pool(processes=numthreads) as pool:
-        results = []
-        for i, arg_tuple in enumerate(_arg_tuples):
-            print(f"Starting resolution {i+1}/{len(_arg_tuples)}: gamma={arg_tuple[2]:.4f}")
-            result = pool.apply_async(run_alg, arg_tuple)
-            results.append(result)
-        final_results = []
-        for i, result in enumerate(results):
-            print(f"Waiting for resolution {i+1}/{len(results)}...")
-            final_results.append(result.get(timeout=600))
-            print(f"Completed resolution {i+1}")
-            #results = pool.starmap(run_alg, _arg_tuples)  # results contains "partition" class
-
+        results = pool.starmap(run_alg, _arg_tuples)
 
     for i in range(len(all_resolutions)):
         nodename = '{:.4f}'.format(all_resolutions[i])
-        resolution_graph.nodes[nodename]['matrix'] = final_results[i]
+        resolution_graph.nodes[nodename]['matrix'] = results[i]
         cluG.add_clusters(resolution_graph, all_resolutions[i])
 
     # collapse related clusters
